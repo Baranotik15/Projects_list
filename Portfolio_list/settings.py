@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
     #my app
     'main',
+    'todo_list'
 ]
 
 MIDDLEWARE = [

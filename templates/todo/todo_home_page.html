@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>To-Do List</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+
+  <h1 class="text-4xl font-bold mb-6">My To-Do List</h1>
+
+  <form action="{% url 'add_task' %}" method="POST" class="mb-6 w-full max-w-md flex">
+    {% csrf_token %}
+    <input
+      type="text"
+      name="title"
+      placeholder="Add new task..."
+      class="flex-grow p-2 rounded-l border border-gray-300 focus:outline-none"
+      required
+    />
+    <button type="submit" class="bg-blue-600 text-white px-4 rounded-r hover:bg-blue-700">
+      Add
+    </button>
+  </form>
+
+  <ul class="w-full max-w-md">
+    {% for task in tasks %}
+      <li
+        class="flex items-center justify-between bg-white mb-2 p-4 rounded shadow
+        {% if task.completed %}line-through text-gray-400{% endif %}"
+      >
+        <span>{{ task.title }}</span>
+        <div class="space-x-2">
+          <a href="{% url 'toggle_task' task.id %}" class="text-green-600 hover:text-green-800">✔</a>
+          <a href="{% url 'delete_task' task.id %}" class="text-red-600 hover:text-red-800">✖</a>
+        </div>
+      </li>
+    {% empty %}
+      <li class="text-gray-500">No tasks yet.</li>
+    {% endfor %}
+  </ul>
+
+  <a href="{% url 'home' %}"
+     class="mt-8 inline-block px-6 py-3 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">
+    ← Back to Home
+  </a>
+
+</body>
+</html>
