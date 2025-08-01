@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-indigo-100 min-h-screen p-8 font-sans">
+  <div class="max-w-2xl mx-auto">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-4xl font-bold text-indigo-700">{{ task.title }}</h1>
+      <a href="{% url 'task_list' %}" 
+         class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full hover:bg-indigo-200 transition font-semibold">
+        ← Back to Tasks
+      </a>
+    </div>
+
+    <!-- Status -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Task Status</h2>
+        <span class="px-3 py-1 rounded-full text-sm font-medium 
+          {% if task.completed %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+          {% if task.completed %}Completed{% else %}Pending{% endif %}
+        </span>
+      </div>
+      
+      <div class="text-sm text-gray-600">
+        Created: {{ task.created_at|date:"F j, Y, g:i a" }}
+      </div>
+    </div>
+
+    <!-- Due Date Section -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Due Date</h2>
+      <div class="flex items-center space-x-4">
+        <input
+          type="datetime-local"
+          id="dueDateInput"
+          class="border rounded-lg p-3 flex-grow focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          value="{{ task.due_date|date:'Y-m-d\\TH:i' }}"
+        />
+        <button id="saveDueDateBtn" 
+                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+          Save
+        </button>
+      </div>
+      <div id="dueDateStatus" class="mt-2 text-sm"></div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Categories</h2>
+      
+      <div id="categoriesList" class="mb-4 space-y-2">
+        {% for cat in task.categories.all %}
+          <span class="inline-block bg-indigo-200 text-indigo-800 px-3 py-2 rounded-full mr-2 mb-2 category-item">
+            {{ cat.name }} 
+            <button class="ml-2 text-red-600 font-bold remove-cat-btn hover:text-red-800" 
+                    data-category="{{ cat.name }}">&times;</button>
+          </span>
+        {% empty %}
+          <span class="text-gray-500 italic">No categories yet.</span>
+        {% endfor %}
+      </div>
+
+      <div class="flex space-x-2">
+        <input
+          type="text"
+          id="newCategoryInput"
+          placeholder="Add new category..."
+          class="border rounded-lg p-3 flex-grow focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+        <button id="addCategoryBtn" 
+                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+          Add
+        </button>
+      </div>
+      
+      <div id="categoryStatus" class="mt-2 text-sm"></div>
+    </div>
+
+    <!-- Save All Changes Button -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+      <button id="saveAllBtn" 
+              class="w-full bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition font-semibold text-lg">
+        💾 Save All Changes
+      </button>
+      <div id="saveStatus" class="mt-2 text-sm text-center"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const taskId = "{{ task.id }}";
+    const categoriesList = document.getElementById('categoriesList');
+    const newCatInput = document.getElementById('newCategoryInput');
+    const addCatBtn = document.getElementById('addCategoryBtn');
+    const dueDateInput = document.getElementById('dueDateInput');
+    const saveDueDateBtn = document.getElementById('saveDueDateBtn');
+    const saveAllBtn = document.getElementById('saveAllBtn');
+    
+    let categories = new Set();
+    
+    // Инициализация категорий
+    document.querySelectorAll('.category-item').forEach(item => {
+      const categoryName = item.textContent.trim().replace('×', '').trim();
+      categories.add(categoryName);
+    });
+
+    // Добавление категории
+    addCatBtn.addEventListener('click', () => {
+      const val = newCatInput.value.trim();
+      if (!val) return;
+
+      if (categories.has(val)) {
+        showStatus('categoryStatus', 'Category already exists!', 'error');
+        return;
+      }
+
+      categories.add(val);
+      addCategoryElement(val);
+      newCatInput.value = '';
+      showStatus('categoryStatus', 'Category added!', 'success');
+    });
+
+    // Enter key для добавления категории
+    newCatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addCatBtn.click();
+      }
+    });
+
+    function addCategoryElement(categoryName) {
+      const span = document.createElement('span');
+      span.className = 'inline-block bg-indigo-200 text-indigo-800 px-3 py-2 rounded-full mr-2 mb-2 category-item';
+      span.innerHTML = categoryName + ' <button class="ml-2 text-red-600 font-bold remove-cat-btn hover:text-red-800" data-category="' + categoryName + '">&times;</button>';
+      categoriesList.appendChild(span);
+      addRemoveListeners();
+    }
+
+    function addRemoveListeners() {
+      document.querySelectorAll('.remove-cat-btn').forEach(btn => {
+        btn.onclick = () => {
+          const categoryName = btn.getAttribute('data-category');
+          categories.delete(categoryName);
+          btn.parentElement.remove();
+          showStatus('categoryStatus', 'Category removed!', 'success');
+        };
+      });
+    }
+
+    // Сохранение due date
+    saveDueDateBtn.addEventListener('click', async () => {
+      try {
+        console.log('Saving due date...');
+        console.log('Task ID:', taskId);
+        console.log('Due date value:', dueDateInput.value);
+        
+        const requestData = {
+          due_date: dueDateInput.value
+        };
+        console.log('Request data:', requestData);
+        
+        const response = await fetch(`/task_list/task/${taskId}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        const result = await response.json();
+        console.log('Response data:', result);
+        
+        if (response.ok && result.status === 'success') {
+          showStatus('dueDateStatus', 'Due date saved successfully!', 'success');
+        } else {
+          showStatus('dueDateStatus', `Error: ${result.message || 'Unknown error'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error saving due date:', error);
+        showStatus('dueDateStatus', `Error: ${error.message}`, 'error');
+      }
+    });
+
+    // Сохранение всех изменений
+    saveAllBtn.addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/task_list/task/${taskId}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            due_date: dueDateInput.value,
+            categories: Array.from(categories)
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.status === 'success') {
+          showStatus('saveStatus', 'All changes saved successfully!', 'success');
+        } else {
+          showStatus('saveStatus', `Error: ${result.message || 'Unknown error'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error saving changes:', error);
+        showStatus('saveStatus', 'Error saving changes!', 'error');
+      }
+    });
+
+    function showStatus(elementId, message, type) {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.className = `mt-2 text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}`;
+      
+      setTimeout(() => {
+        element.textContent = '';
+        element.className = 'mt-2 text-sm';
+      }, 3000);
+    }
+
+    addRemoveListeners();
+  </script>
+
+</body>
+</html>
