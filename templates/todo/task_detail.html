@@ -17,6 +17,25 @@
       </a>
     </div>
 
+    <!-- Task Title Edit Section -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Edit Task Title</h2>
+      <div class="flex items-center space-x-4">
+        <input
+          type="text"
+          id="taskTitleInput"
+          value="{{ task.title }}"
+          class="border rounded-lg p-3 flex-grow focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+          placeholder="Enter task title..."
+        />
+        <button id="saveTitleBtn" 
+                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+          Save Title
+        </button>
+      </div>
+      <div id="titleStatus" class="mt-2 text-sm"></div>
+    </div>
+
     <!-- Status -->
     <div class="bg-white rounded-xl shadow-md p-6 mb-6">
       <div class="flex items-center justify-between mb-4">
@@ -101,6 +120,8 @@
     const dueDateInput = document.getElementById('dueDateInput');
     const saveDueDateBtn = document.getElementById('saveDueDateBtn');
     const saveAllBtn = document.getElementById('saveAllBtn');
+    const taskTitleInput = document.getElementById('taskTitleInput');
+    const saveTitleBtn = document.getElementById('saveTitleBtn');
     
     let categories = new Set();
     
@@ -189,24 +210,70 @@
       }
     });
 
-    // Сохранение всех изменений
-    saveAllBtn.addEventListener('click', async () => {
+    // Сохранение названия задачи
+    saveTitleBtn.addEventListener('click', async () => {
       try {
+        console.log('Saving task title...');
+        console.log('Task ID:', taskId);
+        console.log('Title value:', taskTitleInput.value);
+        
+        const requestData = {
+          title: taskTitleInput.value
+        };
+        console.log('Request data:', requestData);
+        
         const response = await fetch(`/task_list/task/${taskId}/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            due_date: dueDateInput.value,
-            categories: Array.from(categories)
-          })
+          body: JSON.stringify(requestData)
+        });
+        
+        console.log('Response status:', response.status);
+        
+        const result = await response.json();
+        console.log('Response data:', result);
+        
+        if (response.ok && result.status === 'success') {
+          showStatus('titleStatus', 'Title saved successfully!', 'success');
+          // Обновляем заголовок страницы
+          document.querySelector('h1').textContent = taskTitleInput.value;
+        } else {
+          showStatus('titleStatus', `Error: ${result.message || 'Unknown error'}`, 'error');
+        }
+      } catch (error) {
+        console.error('Error saving title:', error);
+        showStatus('titleStatus', `Error: ${error.message}`, 'error');
+      }
+    });
+
+    // Сохранение всех изменений
+    saveAllBtn.addEventListener('click', async () => {
+      try {
+        console.log('Saving all changes...');
+        
+        const requestData = {
+          title: taskTitleInput.value,
+          due_date: dueDateInput.value,
+          categories: Array.from(categories)
+        };
+        console.log('Request data:', requestData);
+        
+        const response = await fetch(`/task_list/task/${taskId}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
         });
         
         const result = await response.json();
         
         if (response.ok && result.status === 'success') {
           showStatus('saveStatus', 'All changes saved successfully!', 'success');
+          // Обновляем заголовок страницы
+          document.querySelector('h1').textContent = taskTitleInput.value;
         } else {
           showStatus('saveStatus', `Error: ${result.message || 'Unknown error'}`, 'error');
         }

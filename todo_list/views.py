@@ -43,6 +43,15 @@ def task_detail(request, pk):
             data = json.loads(request.body)
             logger.info(f"Received data: {data}")
 
+            # Обновление названия задачи
+            if "title" in data:
+                if data["title"] and data["title"].strip():
+                    task.title = data["title"].strip()
+                    logger.info(f"Updated title to: {task.title}")
+                else:
+                    logger.error("Title cannot be empty")
+
+            # Обновление due_date
             if "due_date" in data:
                 if data["due_date"] and data["due_date"] != "":
                     from django.utils.dateparse import parse_datetime
@@ -57,6 +66,7 @@ def task_detail(request, pk):
                     task.due_date = None
                     logger.info("Cleared due_date")
 
+            # Обновление категорий
             if "categories" in data:
                 task.categories.clear()
                 for category_name in data["categories"]:
