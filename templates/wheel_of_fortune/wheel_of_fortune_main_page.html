@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Колесо фортуны</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #wheelCanvas {
+      transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    .arrow {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 30px solid red;
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-r from-indigo-200 to-pink-200 min-h-screen flex flex-col items-center justify-start p-4">
+
+  <h1 class="text-3xl font-bold mt-6 mb-2">🎡 Wheel of fortune</h1>
+  <p class="text-gray-700 mb-4 italic">Add your categories, spin the wheel, and let fate decide.</p>
+
+  <div class="flex gap-2 mb-6">
+    <input id="categoryInput" type="text" placeholder="Add category" class="px-4 py-2 rounded-lg border" />
+    <button onclick="addCategory()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Add</button>
+  </div>
+
+  <div class="flex gap-8 items-start mt-12">
+    <div class="relative">
+      <canvas id="wheelCanvas" width="300" height="300" class="rounded-full shadow-lg"></canvas>
+      <div class="arrow"></div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 min-w-64">
+      <h3 class="text-lg font-bold mb-4 text-gray-800">Categories</h3>
+      <div id="categoryList" class="space-y-2">
+      </div>
+    </div>
+  </div>
+
+  <button onclick="spinWheel()" class="bg-green-500 text-white px-6 py-3 rounded-full font-bold text-xl hover:bg-green-600 transition mt-8">
+    Spin!
+  </button>
+
+  <a href="{% url 'home' %}" class="mt-6 inline-block px-6 py-3 bg-gray-100 text-gray-700 rounded-full shadow-md hover:bg-gray-200 hover:shadow-lg transition font-semibold">
+    ← Back to homepage
+  </a>
+
+  <script>
+    const categories = [];
+    const colors = ['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#4ade80','#facc15','#38bdf8'];
+    let canvas = document.getElementById("wheelCanvas");
+    let ctx = canvas.getContext("2d");
+
+    drawWheel();
+    renderCategoryList();
+
+    function addCategory() {
+      const input = document.getElementById("categoryInput");
+      const value = input.value.trim();
+      if (value !== "") {
+        categories.push(value);
+        console.log("Added category:", value);
+        console.log("All categories:", categories);
+        input.value = "";
+        drawWheel();
+        renderCategoryList();
+      }
+    }
+
+    function renderCategoryList() {
+      const list = document.getElementById("categoryList");
+      if (categories.length === 0) {
+        list.innerHTML = '<p class="text-gray-500 italic">No categories</p>';
+        return;
+      }
+      
+      list.innerHTML = categories.map((cat, index) => `
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+          <span class="text-gray-800">${cat}</span>
+          <div class="flex gap-2">
+            <button onclick="editCategory(${index})" class="text-blue-600 hover:text-blue-800 text-sm">✏️</button>
+            <button onclick="deleteCategory(${index})" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function editCategory(index) {
+      const newName = prompt("Enter new category name:", categories[index]);
+      if (newName && newName.trim() !== "") {
+        categories[index] = newName.trim();
+        drawWheel();
+        renderCategoryList();
+      }
+    }
+
+    function deleteCategory(index) {
+      console.log("Deleting category with index:", index);
+      console.log("Category to delete:", categories[index]);
+      categories.splice(index, 1);
+      console.log("Categories after deletion:", categories);
+      drawWheel();
+      renderCategoryList();
+    }
+
+    function drawWheel() {
+      const total = categories.length;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = canvas.width / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (total === 0) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+        return;
+      }
+
+      const angleStep = 2 * Math.PI / total;
+
+      for (let i = 0; i < total; i++) {
+        const startAngle = i * angleStep;
+        const endAngle = startAngle + angleStep;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + angleStep / 2);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "white";
+        ctx.font = "bold 12px Arial";
+        ctx.fillText(categories[i], radius * 0.7, 4);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      if (categories.length === 0) {
+        alert("Please add at least one category first!");
+        return;
+      }
+
+      const total = categories.length;
+      const anglePerSlice = 360 / total;
+      const randomIndex = Math.floor(Math.random() * total);
+      const degreesPerSlice = 360 / total;
+      const rotation = 360 * 5 + (randomIndex * degreesPerSlice) + degreesPerSlice / 2;
+
+      canvas.style.transition = "none";
+      canvas.style.transform = "rotate(0deg)";
+      void canvas.offsetWidth;
+
+      setTimeout(() => {
+        canvas.style.transition = "transform 5s cubic-bezier(0.33, 1, 0.68, 1)";
+        canvas.style.transform = `rotate(${rotation}deg)`;
+      }, 50);
+
+      setTimeout(() => {
+        drawWheel();
+      }, 5200);
+    }
+  </script>
+</body>
+</html>

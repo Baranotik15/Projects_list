@@ -43,6 +43,13 @@ def task_detail(request, pk):
             data = json.loads(request.body)
             logger.info(f"Received data: {data}")
 
+            if "title" in data:
+                if data["title"] and data["title"].strip():
+                    task.title = data["title"].strip()
+                    logger.info(f"Updated title to: {task.title}")
+                else:
+                    logger.error("Title cannot be empty")
+
             if "due_date" in data:
                 if data["due_date"] and data["due_date"] != "":
                     from django.utils.dateparse import parse_datetime
