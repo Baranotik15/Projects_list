@@ -39,7 +39,8 @@ INSTALLED_APPS = [
 
     #my app
     'main',
-    'todo_list'
+    'todo_list',
+    'wheel_of_fortune',
 ]
 
 MIDDLEWARE = [
