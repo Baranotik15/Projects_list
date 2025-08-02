@@ -125,13 +125,13 @@
     
     let categories = new Set();
     
-    // Инициализация категорий
+    // Initialize categories
     document.querySelectorAll('.category-item').forEach(item => {
       const categoryName = item.textContent.trim().replace('×', '').trim();
       categories.add(categoryName);
     });
 
-    // Добавление категории
+    // Add category
     addCatBtn.addEventListener('click', () => {
       const val = newCatInput.value.trim();
       if (!val) return;
@@ -147,7 +147,7 @@
       showStatus('categoryStatus', 'Category added!', 'success');
     });
 
-    // Enter key для добавления категории
+    // Enter key for adding category
     newCatInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         addCatBtn.click();
@@ -173,7 +173,7 @@
       });
     }
 
-    // Сохранение due date
+    // Save due date
     saveDueDateBtn.addEventListener('click', async () => {
       try {
         console.log('Saving due date...');
@@ -210,7 +210,7 @@
       }
     });
 
-    // Сохранение названия задачи
+    // Save task title
     saveTitleBtn.addEventListener('click', async () => {
       try {
         console.log('Saving task title...');
@@ -237,7 +237,7 @@
         
         if (response.ok && result.status === 'success') {
           showStatus('titleStatus', 'Title saved successfully!', 'success');
-          // Обновляем заголовок страницы
+          // Update page title
           document.querySelector('h1').textContent = taskTitleInput.value;
         } else {
           showStatus('titleStatus', `Error: ${result.message || 'Unknown error'}`, 'error');
@@ -248,7 +248,7 @@
       }
     });
 
-    // Сохранение всех изменений
+    // Save all changes
     saveAllBtn.addEventListener('click', async () => {
       try {
         console.log('Saving all changes...');
@@ -272,7 +272,7 @@
         
         if (response.ok && result.status === 'success') {
           showStatus('saveStatus', 'All changes saved successfully!', 'success');
-          // Обновляем заголовок страницы
+          // Update page title
           document.querySelector('h1').textContent = taskTitleInput.value;
         } else {
           showStatus('saveStatus', `Error: ${result.message || 'Unknown error'}`, 'error');

@@ -50,6 +50,10 @@
     Spin!
   </button>
 
+  <a href="{% url 'home' %}" class="mt-6 inline-block px-6 py-3 bg-gray-100 text-gray-700 rounded-full shadow-md hover:bg-gray-200 hover:shadow-lg transition font-semibold">
+    ← Back to homepage
+  </a>
+
   <script>
     const categories = [];
     const colors = ['#f87171','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6','#fb923c','#4ade80','#facc15','#38bdf8'];
@@ -64,8 +68,8 @@
       const value = input.value.trim();
       if (value !== "") {
         categories.push(value);
-        console.log("Добавлена категория:", value);
-        console.log("Все категории:", categories);
+        console.log("Added category:", value);
+        console.log("All categories:", categories);
         input.value = "";
         drawWheel();
         renderCategoryList();
@@ -91,7 +95,7 @@
     }
 
     function editCategory(index) {
-      const newName = prompt("Введите новое название категории:", categories[index]);
+      const newName = prompt("Enter new category name:", categories[index]);
       if (newName && newName.trim() !== "") {
         categories[index] = newName.trim();
         drawWheel();
@@ -100,10 +104,10 @@
     }
 
     function deleteCategory(index) {
-      console.log("Удаление категории с индексом:", index);
-      console.log("Категория для удаления:", categories[index]);
+      console.log("Deleting category with index:", index);
+      console.log("Category to delete:", categories[index]);
       categories.splice(index, 1);
-      console.log("Категории после удаления:", categories);
+      console.log("Categories after deletion:", categories);
       drawWheel();
       renderCategoryList();
     }
@@ -149,7 +153,7 @@
 
     function spinWheel() {
       if (categories.length === 0) {
-        alert("Сначала добавь хотя бы одну категорию!");
+        alert("Please add at least one category first!");
         return;
       }
 
